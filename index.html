@@ -3,83 +3,106 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>台灣高鐵時刻表查詢 (TDX 平台)</title>
-    <!-- 引入 Tailwind CSS 讓介面好看 -->
+    <title>台灣高鐵時刻表與停車場查詢 (TDX 平台)</title>
+    <!-- 引入 Tailwind CSS -->
     <script src="https://cdn.tailwindcss.com"></script>
 </head>
 <body class="bg-slate-50 min-h-screen text-slate-800">
     <div class="max-w-4xl mx-auto px-4 py-8">
         <header class="text-center mb-8">
-            <h1 class="text-3xl font-bold text-blue-600 mb-2">🚄 台灣高鐵時刻表查詢</h1>
+            <h1 class="text-3xl font-bold text-blue-600 mb-2">🚄 台灣高鐵資訊整合查詢</h1>
             <p class="text-slate-500">串接交通部 TDX 運輸資料流通服務平臺</p>
         </header>
 
-        <!-- 查詢表單 (已內嵌金鑰，免手動輸入) -->
-        <div class="bg-white rounded-2xl shadow-md p-6 mb-8">
-            <h2 class="text-lg font-semibold mb-4 text-slate-700">選擇查詢條件</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 mb-1">出發站</label>
-                    <select id="originStation" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                        <option value="0990">南港</option>
-                        <option value="1000" selected>台北</option>
-                        <option value="1010">板橋</option>
-                        <option value="1020">桃園</option>
-                        <option value="1030">新竹</option>
-                        <option value="1035">苗栗</option>
-                        <option value="1040">台中</option>
-                        <option value="1043">彰化</option>
-                        <option value="1047">雲林</option>
-                        <option value="1050">嘉義</option>
-                        <option value="1060">台南</option>
-                        <option value="1070">左營</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 mb-1">到達站</label>
-                    <select id="destinationStation" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                        <option value="0990">南港</option>
-                        <option value="1000">台北</option>
-                        <option value="1010">板橋</option>
-                        <option value="1020">桃園</option>
-                        <option value="1030">新竹</option>
-                        <option value="1035">苗栗</option>
-                        <option value="1040" selected>台中</option>
-                        <option value="1043">彰化</option>
-                        <option value="1047">雲林</option>
-                        <option value="1050">嘉義</option>
-                        <option value="1060">台南</option>
-                        <option value="1070">左營</option>
-                    </select>
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 mb-1">查詢日期</label>
-                    <input type="date" id="searchDate" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                </div>
-            </div>
-            
-            <button onclick="searchTimetable()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition shadow-sm">
-                查詢時刻表
-            </button>
+        <!-- 功能分頁切換按鈕 -->
+        <div class="flex justify-center mb-6 space-x-4">
+            <button onclick="switchTab('timetable')" id="tabTimetable" class="px-6 py-2 rounded-xl font-medium bg-blue-600 text-white transition shadow-sm">時刻表查詢</button>
+            <button onclick="switchTab('parking')" id="tabParking" class="px-6 py-2 rounded-xl font-medium bg-white text-slate-600 border hover:bg-slate-100 transition shadow-sm">停車場即時車位</button>
         </div>
 
-        <!-- 結果展示區 -->
-        <div id="resultContainer" class="bg-white rounded-2xl shadow-md p-6 hidden">
-            <h3 class="text-xl font-bold mb-4 text-slate-700">查詢結果</h3>
-            <div id="loading" class="text-center py-8 text-slate-400">載入中...</div>
-            <div class="overflow-x-auto">
-                <table id="timetableTable" class="w-full text-left border-collapse hidden">
-                    <thead>
-                        <tr class="border-b bg-slate-50 text-slate-600 text-sm">
-                            <th class="p-3">車次</th>
-                            <th class="p-3">出發時間</th>
-                            <th class="p-3">到達時間</th>
-                            <th class="p-3">行駛時間</th>
-                        </tr>
-                    </thead>
-                    <tbody id="tableBody" class="text-sm divide-y">
-                    </tbody>
-                </table>
+        <!-- 1. 時刻表查詢區塊 -->
+        <div id="sectionTimetable" class="space-y-6">
+            <div class="bg-white rounded-2xl shadow-md p-6">
+                <h2 class="text-lg font-semibold mb-4 text-slate-700">選擇查詢條件</h2>
+                <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">出發站</label>
+                        <select id="originStation" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                            <option value="0990">南港</option>
+                            <option value="1000" selected>台北</option>
+                            <option value="1010">板橋</option>
+                            <option value="1020">桃園</option>
+                            <option value="1030">新竹</option>
+                            <option value="1035">苗栗</option>
+                            <option value="1040">台中</option>
+                            <option value="1043">彰化</option>
+                            <option value="1047">雲林</option>
+                            <option value="1050">嘉義</option>
+                            <option value="1060">台南</option>
+                            <option value="1070">左營</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">到達站</label>
+                        <select id="destinationStation" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                            <option value="0990">南港</option>
+                            <option value="1000">台北</option>
+                            <option value="1010">板橋</option>
+                            <option value="1020">桃園</option>
+                            <option value="1030">新竹</option>
+                            <option value="1035">苗栗</option>
+                            <option value="1040" selected>台中</option>
+                            <option value="1043">彰化</option>
+                            <option value="1047">雲林</option>
+                            <option value="1050">嘉義</option>
+                            <option value="1060">台南</option>
+                            <option value="1070">左營</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label class="block text-sm font-medium text-slate-600 mb-1">查詢日期</label>
+                        <input type="date" id="searchDate" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                    </div>
+                </div>
+                <button onclick="searchTimetable()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition shadow-sm">
+                    查詢時刻表
+                </button>
+            </div>
+
+            <!-- 時刻表結果區 -->
+            <div id="resultContainer" class="bg-white rounded-2xl shadow-md p-6 hidden">
+                <h3 class="text-xl font-bold mb-4 text-slate-700">查詢結果</h3>
+                <div id="loading" class="text-center py-8 text-slate-400">載入中...</div>
+                <div class="overflow-x-auto">
+                    <table id="timetableTable" class="w-full text-left border-collapse hidden">
+                        <thead>
+                            <tr class="border-b bg-slate-50 text-slate-600 text-sm">
+                                <th class="p-3">車次</th>
+                                <th class="p-3">出發時間</th>
+                                <th class="p-3">到達時間</th>
+                                <th class="p-3">行駛時間</th>
+                            </tr>
+                        </thead>
+                        <tbody id="tableBody" class="text-sm divide-y">
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
+        <!-- 2. 停車場即時車位區塊 -->
+        <div id="sectionParking" class="space-y-6 hidden">
+            <div class="bg-white rounded-2xl shadow-md p-6">
+                <div class="flex justify-between items-center mb-4">
+                    <h2 class="text-lg font-semibold text-slate-700">各車站停車場即時剩餘車位</h2>
+                    <button onclick="loadParkingData()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 py-2 rounded-lg transition shadow-sm">
+                        重新整理車位
+                    </button>
+                </div>
+                <div id="parkingLoading" class="text-center py-8 text-slate-400">點擊上方按鈕或切換頁籤以載入車位資料...</div>
+                <div id="parkingContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+                    <!-- 動態產生的停車場卡片 -->
+                </div>
             </div>
         </div>
     </div>
@@ -88,11 +111,33 @@
         // 自動帶入今天的日期
         document.getElementById('searchDate').valueAsDate = new Date();
 
-        // 直接寫死在程式碼中的金鑰
+        // 內嵌你的 TDX 金鑰
         const CONFIG = {
             clientId: 'chris790802-bb9b8edc-adf0-4ac9',
             clientSecret: '612346ff-54e3-4ab7-ad19-44d74771ec35'
         };
+
+        // 頁籤切換邏輯
+        function switchTab(tab) {
+            const tabTimetable = document.getElementById('tabTimetable');
+            const tabParking = document.getElementById('tabParking');
+            const sectionTimetable = document.getElementById('sectionTimetable');
+            const sectionParking = document.getElementById('sectionParking');
+
+            if (tab === 'timetable') {
+                tabTimetable.className = "px-6 py-2 rounded-xl font-medium bg-blue-600 text-white transition shadow-sm";
+                tabParking.className = "px-6 py-2 rounded-xl font-medium bg-white text-slate-600 border hover:bg-slate-100 transition shadow-sm";
+                sectionTimetable.classList.remove('hidden');
+                sectionParking.classList.add('hidden');
+            } else {
+                tabParking.className = "px-6 py-2 rounded-xl font-medium bg-blue-600 text-white transition shadow-sm";
+                tabTimetable.className = "px-6 py-2 rounded-xl font-medium bg-white text-slate-600 border hover:bg-slate-100 transition shadow-sm";
+                sectionParking.classList.remove('hidden');
+                sectionTimetable.classList.add('hidden');
+                // 自動載入停車場資料
+                loadParkingData();
+            }
+        }
 
         async function getAccessToken() {
             const authUrl = 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token';
@@ -117,6 +162,7 @@
             }
         }
 
+        // 查詢時刻表
         async function searchTimetable() {
             const origin = document.getElementById('originStation').value;
             const destination = document.getElementById('destinationStation').value;
@@ -138,10 +184,7 @@
             tableBody.innerHTML = '';
 
             try {
-                // 1. 取得 Token
                 const token = await getAccessToken();
-
-                // 2. 呼叫高鐵每日對號列車時刻表 API
                 const apiUrl = `https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/DailyTimetable/OD/${origin}/to/${destination}/${date}?$format=JSON`;
 
                 const response = await fetch(apiUrl, {
@@ -164,11 +207,10 @@
                     const originStop = item.OriginStopTime;
                     const destStop = item.DestinationStopTime;
                     
-                    // 計算行駛時間
                     const depTime = new Date(`1970-01-01T${originStop.DepartureTime}`);
                     const arrTime = new Date(`1970-01-01T${destStop.ArrivalTime}`);
                     let diffMinutes = Math.floor((arrTime - depTime) / (1000 * 60));
-                    if (diffMinutes < 0) diffMinutes += 24 * 60; // 跨日防護
+                    if (diffMinutes < 0) diffMinutes += 24 * 60;
                     const hours = Math.floor(diffMinutes / 60);
                     const mins = diffMinutes % 60;
                     const durationStr = `${hours > 0 ? hours + '小時' : ''}${mins}分`;
@@ -186,6 +228,73 @@
 
             } catch (error) {
                 loading.textContent = '發生錯誤：' + error.message;
+            }
+        }
+
+        // 載入停車場即時車位
+        async function loadParkingData() {
+            const parkingLoading = document.getElementById('parkingLoading');
+            const parkingContainer = document.getElementById('parkingContainer');
+
+            parkingLoading.classList.remove('hidden');
+            parkingContainer.innerHTML = '';
+
+            try {
+                const token = await getAccessToken();
+                const apiUrl = `https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/ParkingAvailability?$format=JSON`;
+
+                const response = await fetch(apiUrl, {
+                    headers: { 'authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('無法取得停車場即時資料');
+                const data = await response.json();
+
+                parkingLoading.classList.add('hidden');
+
+                if (data.length === 0) {
+                    parkingContainer.innerHTML = `<div class="col-span-2 text-center text-slate-400 py-8">目前無停車場資料</div>`;
+                    return;
+                }
+
+                data.forEach(station => {
+                    const stationName = station.StationName.Zh_tw;
+                    const carParks = station.CarParks || [];
+
+                    let carParkHtml = '';
+                    carParks.forEach(cp => {
+                        const cpName = cp.CarParkName.Zh_tw;
+                        const availableSpaces = cp.AvailableSpaces !== undefined ? cp.AvailableSpaces : '未知';
+                        const totalSpaces = cp.TotalSpaces !== undefined ? cp.TotalSpaces : '-';
+                        
+                        // 顏色區分剩餘車位多寡
+                        let badgeColor = "bg-emerald-100 text-emerald-800";
+                        if (availableSpaces === 0) badgeColor = "bg-red-100 text-red-800";
+                        else if (availableSpaces < 20) badgeColor = "bg-amber-100 text-amber-800";
+
+                        carParkHtml += `
+                            <div class="flex justify-between items-center py-2 border-b last:border-none">
+                                <span class="text-sm font-medium text-slate-600">${cpName}</span>
+                                <span class="px-3 py-1 rounded-full text-xs font-bold ${badgeColor}">
+                                    剩餘空位: ${availableSpaces} / ${totalSpaces}
+                                </span>
+                            </div>
+                        `;
+                    });
+
+                    const card = `
+                        <div class="bg-slate-50 border rounded-xl p-4 shadow-sm">
+                            <h3 class="font-bold text-blue-600 text-lg mb-2">🚄 ${stationName}站</h3>
+                            <div class="space-y-1">
+                                ${carParkHtml || '<p class="text-sm text-slate-400">無停車場資訊</p>'}
+                            </div>
+                        </div>
+                    `;
+                    parkingContainer.innerHTML += card;
+                });
+
+            } catch (error) {
+                parkingLoading.textContent = '發生錯誤：' + error.message;
             }
         }
     </script>
