@@ -14,22 +14,10 @@
             <p class="text-slate-500">串接交通部 TDX 運輸資料流通服務平臺</p>
         </header>
 
-        <!-- 設定金鑰與查詢表單 -->
+        <!-- 查詢表單 (已內嵌金鑰，免手動輸入) -->
         <div class="bg-white rounded-2xl shadow-md p-6 mb-8">
-            <h2 class="text-lg font-semibold mb-4 text-slate-700">1. 設定 TDX 憑證</h2>
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 mb-1">Client ID</label>
-                    <input type="text" id="clientId" placeholder="請輸入您的 TDX Client ID" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                </div>
-                <div>
-                    <label class="block text-sm font-medium text-slate-600 mb-1">Client Secret</label>
-                    <input type="password" id="clientSecret" placeholder="請輸入您的 TDX Client Secret" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
-                </div>
-            </div>
-
-            <h2 class="text-lg font-semibold mb-4 text-slate-700">2. 選擇查詢條件</h2>
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+            <h2 class="text-lg font-semibold mb-4 text-slate-700">選擇查詢條件</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
                 <div>
                     <label class="block text-sm font-medium text-slate-600 mb-1">出發站</label>
                     <select id="originStation" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
@@ -100,12 +88,18 @@
         // 自動帶入今天的日期
         document.getElementById('searchDate').valueAsDate = new Date();
 
-        async function getAccessToken(clientId, clientSecret) {
+        // 直接寫死在程式碼中的金鑰
+        const CONFIG = {
+            clientId: 'chris790802-bb9b8edc-adf0-4ac9',
+            clientSecret: '612346ff-54e3-4ab7-ad19-44d74771ec35'
+        };
+
+        async function getAccessToken() {
             const authUrl = 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token';
             const body = new URLSearchParams({
                 grant_type: 'client_credentials',
-                client_id: clientId,
-                client_secret: clientSecret
+                client_id: CONFIG.clientId,
+                client_secret: CONFIG.clientSecret
             });
 
             try {
@@ -114,7 +108,7 @@
                     headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
                     body: body
                 });
-                if (!response.ok) throw new Error('TDX 認證失敗，請檢查 Client ID 與 Client Secret');
+                if (!response.ok) throw new Error('TDX 認證失敗，請檢查金鑰設定');
                 const data = await response.json();
                 return data.access_token;
             } catch (error) {
@@ -124,16 +118,9 @@
         }
 
         async function searchTimetable() {
-            const clientId = document.getElementById('clientId').value.trim();
-            const clientSecret = document.getElementById('clientSecret').value.trim();
             const origin = document.getElementById('originStation').value;
             const destination = document.getElementById('destinationStation').value;
             const date = document.getElementById('searchDate').value;
-
-            if (!clientId || !clientSecret) {
-                alert('請先輸入 TDX 的 Client ID 與 Client Secret！');
-                return;
-            }
 
             if (origin === destination) {
                 alert('出發站與到達站不能相同！');
@@ -152,10 +139,9 @@
 
             try {
                 // 1. 取得 Token
-                const token = await getAccessToken(clientId, clientSecret);
+                const token = await getAccessToken();
 
                 // 2. 呼叫高鐵每日對號列車時刻表 API
-                // 格式：https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/DailyTimetable/OD/{OriginStationID}/to/{DestinationStationID}/{Date}
                 const apiUrl = `https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/DailyTimetable/OD/${origin}/to/${destination}/${date}?$format=JSON`;
 
                 const response = await fetch(apiUrl, {
