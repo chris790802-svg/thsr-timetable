@@ -17,7 +17,7 @@
         <!-- 功能分頁切換按鈕 -->
         <div class="flex justify-center mb-6 space-x-4">
             <button onclick="switchTab('timetable')" id="tabTimetable" class="px-6 py-2 rounded-xl font-medium bg-blue-600 text-white transition shadow-sm">時刻表查詢</button>
-            <button onclick="switchTab('parking')" id="tabParking" class="px-6 py-2 rounded-xl font-medium bg-white text-slate-600 border hover:bg-slate-100 transition shadow-sm">高鐵停車場即時車位</button>
+            <button onclick="switchTab('parking')" id="tabParking" class="px-6 py-2 rounded-xl font-medium bg-white text-slate-600 border hover:bg-slate-100 transition shadow-sm">高鐵各站停車場資訊</button>
         </div>
 
         <!-- 1. 時刻表查詢區塊 -->
@@ -90,18 +90,78 @@
             </div>
         </div>
 
-        <!-- 2. 停車場即時車位區塊 -->
+        <!-- 2. 高鐵停車場資訊區塊 -->
         <div id="sectionParking" class="space-y-6 hidden">
             <div class="bg-white rounded-2xl shadow-md p-6">
                 <div class="flex justify-between items-center mb-4">
-                    <h2 class="text-lg font-semibold text-slate-700">高鐵車站停車場即時剩餘車位</h2>
-                    <button onclick="loadParkingData()" class="bg-emerald-600 hover:bg-emerald-700 text-white text-sm px-4 py-2 rounded-lg transition shadow-sm">
-                        重新整理車位
-                    </button>
+                    <div>
+                        <h2 class="text-lg font-semibold text-slate-700">台灣高鐵各車站停車場資訊</h2>
+                        <p class="text-xs text-slate-400 mt-0.5">提供各車站官方附設及周邊主要停車場與車位指引</p>
+                    </div>
                 </div>
-                <div id="parkingLoading" class="text-center py-8 text-slate-400">載入中...</div>
-                <div id="parkingContainer" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-                    <!-- 動態產生的停車場卡片 -->
+                
+                <div class="grid grid-cols-1 md:grid-cols-2 gap-4" id="parkingCardContainer">
+                    <!-- 靜態高品質高鐵停車場列表 -->
+                    <div class="bg-slate-50 border rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-blue-600 text-base mb-1">🚗 高鐵南港站停車場</h3>
+                        <p class="text-xs text-slate-600 mb-2">位置：南港車站地下停車場 (CITYLINK / 潤泰)</p>
+                        <span class="inline-block bg-blue-100 text-blue-800 px-2.5 py-1 rounded-md text-xs font-medium">大型綜合停車場・車位充足</span>
+                    </div>
+                    <div class="bg-slate-50 border rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-blue-600 text-base mb-1">🚗 高鐵台北站停車場</h3>
+                        <p class="text-xs text-slate-600 mb-2">位置：台北車站地下停車場 / 臺鐵東區地下街停車場</p>
+                        <span class="inline-block bg-blue-100 text-blue-800 px-2.5 py-1 rounded-md text-xs font-medium">市中心轉乘・車位流動快</span>
+                    </div>
+                    <div class="bg-slate-50 border rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-blue-600 text-base mb-1">🚗 高鐵板橋站停車場</h3>
+                        <p class="text-xs text-slate-600 mb-2">位置：板橋車站特專區地下停車場 (環球購物中心)</p>
+                        <span class="inline-block bg-blue-100 text-blue-800 px-2.5 py-1 rounded-md text-xs font-medium">商場共構・室內車位</span>
+                    </div>
+                    <div class="bg-slate-50 border rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-blue-600 text-base mb-1">🚗 高鐵桃園站停車場</h3>
+                        <p class="text-xs text-slate-600 mb-2">位置：站前東西路立體停車場 / 露天停車場 (鄰近華泰名品城)</p>
+                        <span class="inline-block bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md text-xs font-medium">多處公有與私有大型停車場</span>
+                    </div>
+                    <div class="bg-slate-50 border rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-blue-600 text-base mb-1">🚗 高鐵新竹站停車場</h3>
+                        <p class="text-xs text-slate-600 mb-2">Position: 高鐵新竹站特約及公有停車場 (福興東路旁)</p>
+                        <span class="inline-block bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md text-xs font-medium">露天及室內計時停車</span>
+                    </div>
+                    <div class="bg-slate-50 border rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-blue-600 text-base mb-1">🚗 高鐵苗栗站停車場</h3>
+                        <p class="text-xs text-slate-600 mb-2">位置：站區周邊公有免費/計費停車場</p>
+                        <span class="inline-block bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md text-xs font-medium">停車空間寬敞</span>
+                    </div>
+                    <div class="bg-slate-50 border rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-blue-600 text-base mb-1">🚗 高鐵台中站停車場</h3>
+                        <p class="text-xs text-slate-600 mb-2">位置：P1、P2、P3、P4 旅客專用立體及戶外停車場</p>
+                        <span class="inline-block bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md text-xs font-medium">車位極多但尖峰易滿</span>
+                    </div>
+                    <div class="bg-slate-50 border rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-blue-600 text-base mb-1">🚗 高鐵彰化站停車場</h3>
+                        <p class="text-xs text-slate-600 mb-2">位置：站區周邊附設平面停車場</p>
+                        <span class="inline-block bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md text-xs font-medium">平面車位・進出便利</span>
+                    </div>
+                    <div class="bg-slate-50 border rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-blue-600 text-base mb-1">🚗 高鐵雲林站停車場</h3>
+                        <p class="text-xs text-slate-600 mb-2">位置：站區周邊平面停車場</p>
+                        <span class="inline-block bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md text-xs font-medium">平面車位・車位充足</span>
+                    </div>
+                    <div class="bg-slate-50 border rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-blue-600 text-base mb-1">🚗 高鐵嘉義站停車場</h3>
+                        <p class="text-xs text-slate-600 mb-2">位置：站區前及周邊公有與特約停車場</p>
+                        <span class="inline-block bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md text-xs font-medium">空間寬敞</span>
+                    </div>
+                    <div class="bg-slate-50 border rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-blue-600 text-base mb-1">🚗 高鐵台南站停車場</h3>
+                        <p class="text-xs text-slate-600 mb-2">位置：站區周邊大型平面與立體停車場</p>
+                        <span class="inline-block bg-emerald-100 text-emerald-800 px-2.5 py-1 rounded-md text-xs font-medium">鄰近沙崙車站</span>
+                    </div>
+                    <div class="bg-slate-50 border rounded-xl p-4 shadow-sm">
+                        <h3 class="font-bold text-blue-600 text-base mb-1">🚗 高鐵左營站停車場</h3>
+                        <p class="text-xs text-slate-600 mb-2">位置：新光三越左營店共構停車場及站前立體停車場</p>
+                        <span class="inline-block bg-amber-100 text-amber-800 px-2.5 py-1 rounded-md text-xs font-medium">車位多但假日人潮眾多</span>
+                    </div>
                 </div>
             </div>
         </div>
@@ -134,7 +194,6 @@
                 tabTimetable.className = "px-6 py-2 rounded-xl font-medium bg-white text-slate-600 border hover:bg-slate-100 transition shadow-sm";
                 sectionParking.classList.remove('hidden');
                 sectionTimetable.classList.add('hidden');
-                loadParkingData();
             }
         }
 
@@ -227,72 +286,6 @@
 
             } catch (error) {
                 loading.textContent = '發生錯誤：' + error.message;
-            }
-        }
-
-        // 載入停車場即時車位（使用全國停車場動態資料並篩選高鐵站）
-        async function loadParkingData() {
-            const parkingLoading = document.getElementById('parkingLoading');
-            const parkingContainer = document.getElementById('parkingContainer');
-
-            parkingLoading.classList.remove('hidden');
-            parkingContainer.innerHTML = '';
-
-            try {
-                const token = await getAccessToken();
-                // 使用 TDX的全國停車場可用車位動態資料 API
-                const apiUrl = `https://tdx.transportdata.tw/api/basic/v1/Parking/Availability/ParkingAvailability?\$format=JSON`;
-
-                const response = await fetch(apiUrl, {
-                    headers: { 'authorization': `Bearer ${token}` }
-                });
-
-                if (!response.ok) throw new Error('無法取得停車場即時資料');
-                const result = await response.json();
-                // 兼容不同格式的回傳結構 (有些 API 會放在 Parkings 或直接是陣列)
-                const data = Array.isArray(result) ? result : (result.Parkings || []);
-
-                parkingLoading.classList.add('hidden');
-
-                // 過濾出包含「高鐵」或常見高鐵站名稱關鍵字的停車場
-                const hsrKeywords = ['高鐵', '台灣高鐵', '左營站', '台南站', '嘉義站', '雲林站', '彰化站', '台中站', '苗栗站', '新竹站', '桃園站', '板橋站', '南港站', '台北站'];
-                const hsrParkings = data.filter(item => {
-                    const name = item.CarParkName?.Zh_tw || item.ParkingName?.Zh_tw || '';
-                    const desc = item.CarParkUID || '';
-                    return hsrKeywords.some(kw => name.includes(kw));
-                });
-
-                if (hsrParkings.length === 0) {
-                    // 如果用關鍵字篩選不到，嘗試直接顯示前 20 筆或提示
-                    parkingContainer.innerHTML = `<div class="col-span-2 text-center text-slate-400 py-8">目前找不到高鐵專屬停車場即時動態</div>`;
-                    return;
-                }
-
-                hsrParkings.forEach(cp => {
-                    const cpName = cp.CarParkName?.Zh_tw || cp.ParkingName?.Zh_tw || '未命名停車場';
-                    const availableSpaces = cp.AvailableSpaces !== undefined ? cp.AvailableSpaces : (cp.AvailableSpacesDetail?.GeneralSpaces || '未知');
-                    const totalSpaces = cp.TotalSpaces || '-';
-                    
-                    let badgeColor = "bg-emerald-100 text-emerald-800";
-                    if (availableSpaces === 0) badgeColor = "bg-red-100 text-red-800";
-                    else if (availableSpaces < 20) badgeColor = "bg-amber-100 text-amber-800";
-
-                    const card = `
-                        <div class="bg-slate-50 border rounded-xl p-4 shadow-sm flex justify-between items-center">
-                            <div>
-                                <h3 class="font-bold text-slate-700 text-base mb-1">🚗 ${cpName}</h3>
-                                <p class="text-xs text-slate-400">即時更新車位</p>
-                            </div>
-                            <span class="px-3 py-1.5 rounded-full text-xs font-bold ${badgeColor}">
-                                剩餘空位: ${availableSpaces} / ${totalSpaces}
-                            </span>
-                        </div>
-                    `;
-                    parkingContainer.innerHTML += card;
-                });
-
-            } catch (error) {
-                parkingLoading.textContent = '發生錯誤：' + error.message;
             }
         }
     </script>
