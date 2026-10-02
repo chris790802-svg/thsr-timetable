@@ -1,0 +1,207 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>台灣高鐵時刻表查詢 (TDX 平台)</title>
+    <!-- 引入 Tailwind CSS 讓介面好看 -->
+    <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="bg-slate-50 min-h-screen text-slate-800">
+    <div class="max-w-4xl mx-auto px-4 py-8">
+        <header class="text-center mb-8">
+            <h1 class="text-3xl font-bold text-blue-600 mb-2">🚄 台灣高鐵時刻表查詢</h1>
+            <p class="text-slate-500">串接交通部 TDX 運輸資料流通服務平臺</p>
+        </header>
+
+        <!-- 設定金鑰與查詢表單 -->
+        <div class="bg-white rounded-2xl shadow-md p-6 mb-8">
+            <h2 class="text-lg font-semibold mb-4 text-slate-700">1. 設定 TDX 憑證</h2>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Client ID</label>
+                    <input type="text" id="clientId" placeholder="請輸入您的 TDX Client ID" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">Client Secret</label>
+                    <input type="password" id="clientSecret" placeholder="請輸入您的 TDX Client Secret" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+            </div>
+
+            <h2 class="text-lg font-semibold mb-4 text-slate-700">2. 選擇查詢條件</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-4">
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">出發站</label>
+                    <select id="originStation" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        <option value="0990">南港</option>
+                        <option value="1000" selected>台北</option>
+                        <option value="1010">板橋</option>
+                        <option value="1020">桃園</option>
+                        <option value="1030">新竹</option>
+                        <option value="1035">苗栗</option>
+                        <option value="1040">台中</option>
+                        <option value="1043">彰化</option>
+                        <option value="1047">雲林</option>
+                        <option value="1050">嘉義</option>
+                        <option value="1060">台南</option>
+                        <option value="1070">左營</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">到達站</label>
+                    <select id="destinationStation" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                        <option value="0990">南港</option>
+                        <option value="1000">台北</option>
+                        <option value="1010">板橋</option>
+                        <option value="1020">桃園</option>
+                        <option value="1030">新竹</option>
+                        <option value="1035">苗栗</option>
+                        <option value="1040" selected>台中</option>
+                        <option value="1043">彰化</option>
+                        <option value="1047">雲林</option>
+                        <option value="1050">嘉義</option>
+                        <option value="1060">台南</option>
+                        <option value="1070">左營</option>
+                    </select>
+                </div>
+                <div>
+                    <label class="block text-sm font-medium text-slate-600 mb-1">查詢日期</label>
+                    <input type="date" id="searchDate" class="w-full px-3 py-2 border rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 text-sm">
+                </div>
+            </div>
+            
+            <button onclick="searchTimetable()" class="w-full bg-blue-600 hover:bg-blue-700 text-white font-medium py-2.5 rounded-lg transition shadow-sm">
+                查詢時刻表
+            </button>
+        </div>
+
+        <!-- 結果展示區 -->
+        <div id="resultContainer" class="bg-white rounded-2xl shadow-md p-6 hidden">
+            <h3 class="text-xl font-bold mb-4 text-slate-700">查詢結果</h3>
+            <div id="loading" class="text-center py-8 text-slate-400">載入中...</div>
+            <div class="overflow-x-auto">
+                <table id="timetableTable" class="w-full text-left border-collapse hidden">
+                    <thead>
+                        <tr class="border-b bg-slate-50 text-slate-600 text-sm">
+                            <th class="p-3">車次</th>
+                            <th class="p-3">出發時間</th>
+                            <th class="p-3">到達時間</th>
+                            <th class="p-3">行駛時間</th>
+                        </tr>
+                    </thead>
+                    <tbody id="tableBody" class="text-sm divide-y">
+                    </tbody>
+                </table>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // 自動帶入今天的日期
+        document.getElementById('searchDate').valueAsDate = new Date();
+
+        async function getAccessToken(clientId, clientSecret) {
+            const authUrl = 'https://tdx.transportdata.tw/auth/realms/TDXConnect/protocol/openid-connect/token';
+            const body = new URLSearchParams({
+                grant_type: 'client_credentials',
+                client_id: clientId,
+                client_secret: clientSecret
+            });
+
+            try {
+                const response = await fetch(authUrl, {
+                    method: 'POST',
+                    headers: { 'Content-Type': 'application/x-www-form-urlencoded' },
+                    body: body
+                });
+                if (!response.ok) throw new Error('TDX 認證失敗，請檢查 Client ID 與 Client Secret');
+                const data = await response.json();
+                return data.access_token;
+            } catch (error) {
+                alert(error.message);
+                throw error;
+            }
+        }
+
+        async function searchTimetable() {
+            const clientId = document.getElementById('clientId').value.trim();
+            const clientSecret = document.getElementById('clientSecret').value.trim();
+            const origin = document.getElementById('originStation').value;
+            const destination = document.getElementById('destinationStation').value;
+            const date = document.getElementById('searchDate').value;
+
+            if (!clientId || !clientSecret) {
+                alert('請先輸入 TDX 的 Client ID 與 Client Secret！');
+                return;
+            }
+
+            if (origin === destination) {
+                alert('出發站與到達站不能相同！');
+                return;
+            }
+
+            const resultContainer = document.getElementById('resultContainer');
+            const loading = document.getElementById('loading');
+            const table = document.getElementById('timetableTable');
+            const tableBody = document.getElementById('tableBody');
+
+            resultContainer.classList.remove('hidden');
+            loading.classList.remove('hidden');
+            table.classList.add('hidden');
+            tableBody.innerHTML = '';
+
+            try {
+                // 1. 取得 Token
+                const token = await getAccessToken(clientId, clientSecret);
+
+                // 2. 呼叫高鐵每日對號列車時刻表 API
+                // 格式：https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/DailyTimetable/OD/{OriginStationID}/to/{DestinationStationID}/{Date}
+                const apiUrl = `https://tdx.transportdata.tw/api/basic/v2/Rail/THSR/DailyTimetable/OD/${origin}/to/${destination}/${date}?$format=JSON`;
+
+                const response = await fetch(apiUrl, {
+                    headers: { 'authorization': `Bearer ${token}` }
+                });
+
+                if (!response.ok) throw new Error('無法取得高鐵時刻表資料');
+                const data = await response.json();
+
+                loading.classList.add('hidden');
+                table.classList.remove('hidden');
+
+                if (data.length === 0) {
+                    tableBody.innerHTML = `<tr><td colspan="4" class="p-4 text-center text-slate-400">查無當日直達車次資料</td></tr>`;
+                    return;
+                }
+
+                data.forEach(item => {
+                    const trainInfo = item.DailyTrainInfo;
+                    const originStop = item.OriginStopTime;
+                    const destStop = item.DestinationStopTime;
+                    
+                    // 計算行駛時間
+                    const depTime = new Date(`1970-01-01T${originStop.DepartureTime}`);
+                    const arrTime = new Date(`1970-01-01T${destStop.ArrivalTime}`);
+                    let diffMinutes = Math.floor((arrTime - depTime) / (1000 * 60));
+                    if (diffMinutes < 0) diffMinutes += 24 * 60; // 跨日防護
+                    const hours = Math.floor(diffMinutes / 60);
+                    const mins = diffMinutes % 60;
+                    const durationStr = `${hours > 0 ? hours + '小時' : ''}${mins}分`;
+
+                    const row = `
+                        <tr class="hover:bg-slate-50">
+                            <td class="p-3 font-semibold text-blue-600">${trainInfo.TrainNo}</td>
+                            <td class="p-3">${originStop.DepartureTime}</td>
+                            <td class="p-3">${destStop.ArrivalTime}</td>
+                            <td class="p-3 text-slate-500">${durationStr}</td>
+                        </tr>
+                    `;
+                    tableBody.innerHTML += row;
+                });
+
+            } catch (error) {
+                loading.textContent = '發生錯誤：' + error.message;
+            }
+        }
+    </script>
+</body>
+</html>
